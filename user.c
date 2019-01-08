@@ -16,7 +16,7 @@ int add_user(char * username, char * password){
     strcpy(new_user.username, username);
     strcpy(new_user.password, password);
 
-    char path[64] = "users/";
+    char path[64] = "data/users/";
     strcat(path, username);
 
     int f = open(path, O_CREAT | O_WRONLY | O_EXCL, 0666);
@@ -30,12 +30,13 @@ int add_user(char * username, char * password){
 }
 
 int validate_user(char * username, char * password){
-    char path[64] = "users/";
+    char path[64] = "data/users/";
     strcat(path, username);
 
     int f = open(path, O_RDONLY, 0666);
     if(f == -1){
         printf("%s\n", strerror(errno));
+        return 0;
     } else {
         struct user u;
         read(f, &u, sizeof(struct user));

@@ -12,7 +12,7 @@ int main() {
     from_server = client_handshake( &to_server );
     while(1){
         char * buffer = calloc(BUFFER_SIZE, sizeof(char *));
-        printf("slick-wiki$ ");
+        printf("slicky-wiki$ ");
         fgets(buffer, BUFFER_SIZE, stdin);
         buffer[strlen(buffer) - 1] = 0;
 

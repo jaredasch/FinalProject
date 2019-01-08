@@ -12,7 +12,7 @@
 #define ACK "HOLA"
 
 #define HANDSHAKE_BUFFER_SIZE 10
-#define BUFFER_SIZE 1000
+#define BUFFER_SIZE 1024
 
 int server_handshake(int *to_client);
 
