@@ -10,63 +10,67 @@
 
   returns the file descriptor for the upstream pipe.
   =========================*/
-int server_handshake(int *to_client) {
-    mkfifo("wkp", 0644);
-    printf("(server) Waiting for client connection to WKP\n");
-    int wkp = open("wkp", O_RDONLY);
+  int server_setup() {
+    int sd, i;
 
-    char private_pipe_name[HANDSHAKE_BUFFER_SIZE];
-    printf("(server) Preparing to recieve private pipe name...\n");
-    read(wkp, private_pipe_name, HANDSHAKE_BUFFER_SIZE);
-    remove("wkp");
+    //create the socket
+    sd = socket( AF_INET, SOCK_STREAM, 0 );
+    printf("[server] socket created\n");
 
-    int f = fork();
-    if(f) return 0;
+    //setup structs for getaddrinfo
+    struct addrinfo * hints, * results;
+    hints = (struct addrinfo *)calloc(1, sizeof(struct addrinfo));
+    hints->ai_family = AF_INET;  //IPv4 address
+    hints->ai_socktype = SOCK_STREAM;  //TCP socket
+    hints->ai_flags = AI_PASSIVE;  //Use all valid addresses
+    getaddrinfo(NULL, PORT, hints, &results); //NULL means use local address
 
-    printf("(server) Received private pipe name %s\n", private_pipe_name);
-    int downstream = open(private_pipe_name, O_WRONLY);
-    write(downstream, ACK, HANDSHAKE_BUFFER_SIZE);
-    printf("(server) Sending acknowledgement message\n");
+    //bind the socket to address and port
+    i = bind( sd, results->ai_addr, results->ai_addrlen );
+    printf("[server] socket bound\n");
 
-    char msg[HANDSHAKE_BUFFER_SIZE];
-    read(wkp, msg, HANDSHAKE_BUFFER_SIZE);
-    printf("(server) Received acknowledgement message %s from client\n", msg);
-    *to_client = downstream;
-    return wkp;
-}
+    //set socket to listen state
+    i = listen(sd, 10);
+    printf("[server] socket in listen state\n");
 
+    //free the structs used by getaddrinfo
+    free(hints);
+    freeaddrinfo(results);
+    return sd;
+  }
 
-/*=========================
-  client_handshake
-  args: int * to_server
+  int client_setup(char * server) {
+    int sd, i;
 
-  Performs the client side pipe 3 way handshake.
-  Sets *to_server to the file descriptor for the upstream pipe.
+    //create the socket
+    sd = socket( AF_INET, SOCK_STREAM, 0 );
 
-  returns the file descriptor for the downstream pipe.
-  =========================*/
-int client_handshake(int *to_server) {
-    printf("(client) Waiting to connect to server on wkp\n");
-    int wkp = open("wkp", O_WRONLY);
+    //run getaddrinfo
+    /* hints->ai_flags not needed because the client
+       specifies the desired address. */
+    struct addrinfo * hints, * results;
+    hints = (struct addrinfo *)calloc(1, sizeof(struct addrinfo));
+    hints->ai_family = AF_INET;  //IPv4
+    hints->ai_socktype = SOCK_STREAM;  //TCP socket
+    getaddrinfo(server, PORT, hints, &results);
 
-    char private_pipe_name[HANDSHAKE_BUFFER_SIZE] = "priv_pipe";
-    mkfifo(private_pipe_name, 0644);
+    //connect to the server
+    //connect will bind the socket for us
+    i = connect( sd, results->ai_addr, results->ai_addrlen );
 
-    printf("(client) Creating private pipe with name %s\n", private_pipe_name);
+    free(hints);
+    freeaddrinfo(results);
 
-    write(wkp, private_pipe_name, HANDSHAKE_BUFFER_SIZE);
-    printf("(client) Sent private pipe name \"%s\" to server...waiting for server connection to private pipe\n", private_pipe_name);
-    int downstream = open(private_pipe_name, O_RDONLY);
+    return sd;
+  }
 
-    printf("(client) Waiting for acknowledgement from server...\n");
-    char msg[HANDSHAKE_BUFFER_SIZE];
-    read(downstream, msg, HANDSHAKE_BUFFER_SIZE);
-    printf("(client) Received acknowledgement message %s from server\n", msg);
+  int server_connect(int sd) {
+    int client_socket;
+    socklen_t sock_size;
+    struct sockaddr_storage client_address;
 
-    printf("(client) Sending acknowledgement message %s back to server\n", msg);
-    write(wkp, msg, HANDSHAKE_BUFFER_SIZE);
+    sock_size = sizeof(client_address);
+    client_socket = accept(sd, (struct sockaddr *)&client_address, &sock_size);
 
-    remove(private_pipe_name);
-    *to_server = wkp;
-    return downstream;
+    return client_socket;
 }

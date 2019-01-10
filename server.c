@@ -23,71 +23,76 @@ char ** parse_args(char * cmd) {
     return arg_list;
 }
 
-void create_page(char * page_name, int to_client) {
+void create_page(char * page_name, int client_socket) {
     printf("Trying to create page %s...", page_name);
     char filename[64] = "data/pages/";
     strcat(filename, page_name);
     int fd = open(filename, O_CREAT | O_EXCL | O_WRONLY, 0644);
     if (fd == -1) {
         printf("page creation failed\n");
-        write(to_client, "Page already exists", BUFFER_SIZE);
+        write(client_socket, "Page already exists", BUFFER_SIZE);
     } else {
         printf("successfully created\n");
-        write(to_client, "Page created successfully", BUFFER_SIZE);
+        write(client_socket, "Page created successfully", BUFFER_SIZE);
     }
 }
 
-void command_handler(char ** args, int to_client) {
+void command_handler(char ** args, int client_socket) {
     for(int i = 0; i < strlen(args[0]); i++){
         printf("%c", args[0][i]);
     }
     // printf("args[LAST]: %s\n", args[strlen(args[0])-1]);
     if (strcmp(args[0], "create-page") == 0) {
-        create_page(args[1], to_client);
+        create_page(args[1], client_socket);
     } else {
-        write(to_client, args[0], BUFFER_SIZE);
+        write(client_socket, args[0], BUFFER_SIZE);
     }
 }
 
 int main() {
-    int to_client;
-    int from_client;
+    int listen_socket;
 
+    listen_socket = server_setup();
     signal(SIGINT, sighandler);
 
     while (1) {
         char * username = NULL;
 
-        from_client = server_handshake( & to_client);
+        int client_socket = server_connect(listen_socket);
+
         char data[BUFFER_SIZE];
-        if (from_client) {
-            while (read(from_client, data, BUFFER_SIZE)) {
+        int f = fork();
+        if (f == 0) {
+            while (read(client_socket, data, BUFFER_SIZE)) {
                 char ** args = parse_args(data);
                 if (!username) {
                     if (strcmp(args[0], "login") == 0) {
                         if ( args[1] && args[2] && validate_user(args[1], args[2])) {
                             username = calloc(1, 64);
                             strcpy(username, args[1]);
-                            write(to_client, "Logged in successfully", BUFFER_SIZE);
+                            write(client_socket, "Logged in successfully", BUFFER_SIZE);
                         } else {
-                            write(to_client, "Username or password incorrect", BUFFER_SIZE);
+                            write(client_socket, "Username or password incorrect", BUFFER_SIZE);
                         }
                     } else if (strcmp(args[0], "signup") == 0) {
                         if ( !(args[1] && args[2]) ){
-                            write(to_client, "Command use: 'signup <username> <password>'", BUFFER_SIZE);
+                            write(client_socket, "Command use: 'signup <username> <password>'", BUFFER_SIZE);
                         } else if ( add_user(args[1], args[2])) {
-                            write(to_client, "User created succesfully", BUFFER_SIZE);
+                            write(client_socket, "User created succesfully", BUFFER_SIZE);
                         } else {
-                            write(to_client, "Username taken", BUFFER_SIZE);
+                            write(client_socket, "Username taken", BUFFER_SIZE);
                         }
                     } else {
-                        write(to_client, "Please login with 'login <username> <password>' or create an account with signup <username> <password>'", BUFFER_SIZE);
+                        write(client_socket, "Please login with 'login <username> <password>' or create an account with signup <username> <password>'", BUFFER_SIZE);
                     }
                 } else {
                     printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
-                    command_handler(args, to_client);
+                    command_handler(args, client_socket);
                 }
             }
+        }
+        else{
+          close(client_socket);
         }
     }
 }
