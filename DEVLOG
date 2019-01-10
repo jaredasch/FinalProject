@@ -2,4 +2,5 @@
 Adapt shell-like interface to previously developed forking server
 Added functionality where users can remotely create pages, won't be allowed to create/overwrite pages that already exist
 
-
+01-09-2019 -- Colin Hosking
+Changed forking server to work with sockets instead of pipes.
