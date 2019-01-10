@@ -14,7 +14,6 @@
 
 #ifndef NETWORKING_H
 #define NETWORKING_H
-#define ACK "HOLA"
 
 #define PORT "9001"
 #define BUFFER_SIZE 1024
