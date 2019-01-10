@@ -49,6 +49,28 @@ void command_handler(char ** args, int client_socket) {
     }
 }
 
+void authenticate_user(char ** args, int client_socket, char ** username){
+    if (strcmp(args[0], "login") == 0) {
+        if ( args[1] && args[2] && validate_user(args[1], args[2])) {
+            *username = calloc(1, 64);
+            strcpy(*username, args[1]);
+            write(client_socket, "Logged in successfully", BUFFER_SIZE);
+        } else {
+            write(client_socket, "Username or password incorrect", BUFFER_SIZE);
+        }
+    } else if (strcmp(args[0], "signup") == 0) {
+        if ( !(args[1] && args[2]) ){
+            write(client_socket, "Command use: 'signup <username> <password>'", BUFFER_SIZE);
+        } else if ( add_user(args[1], args[2])) {
+            write(client_socket, "User created succesfully", BUFFER_SIZE);
+        } else {
+            write(client_socket, "Username taken", BUFFER_SIZE);
+        }
+    } else {
+        write(client_socket, "Please login with 'login <username> <password>' or create an account with signup <username> <password>'", BUFFER_SIZE);
+    }
+}
+
 int main() {
     int listen_socket;
 
@@ -66,25 +88,7 @@ int main() {
             while (read(client_socket, data, BUFFER_SIZE)) {
                 char ** args = parse_args(data);
                 if (!username) {
-                    if (strcmp(args[0], "login") == 0) {
-                        if ( args[1] && args[2] && validate_user(args[1], args[2])) {
-                            username = calloc(1, 64);
-                            strcpy(username, args[1]);
-                            write(client_socket, "Logged in successfully", BUFFER_SIZE);
-                        } else {
-                            write(client_socket, "Username or password incorrect", BUFFER_SIZE);
-                        }
-                    } else if (strcmp(args[0], "signup") == 0) {
-                        if ( !(args[1] && args[2]) ){
-                            write(client_socket, "Command use: 'signup <username> <password>'", BUFFER_SIZE);
-                        } else if ( add_user(args[1], args[2])) {
-                            write(client_socket, "User created succesfully", BUFFER_SIZE);
-                        } else {
-                            write(client_socket, "Username taken", BUFFER_SIZE);
-                        }
-                    } else {
-                        write(client_socket, "Please login with 'login <username> <password>' or create an account with signup <username> <password>'", BUFFER_SIZE);
-                    }
+                    authenticate_user(args, client_socket, &username);
                 } else {
                     printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
                     command_handler(args, client_socket);
@@ -93,6 +97,6 @@ int main() {
         }
         else{
           close(client_socket);
-        }
-    }
+      }
+  }
 }
