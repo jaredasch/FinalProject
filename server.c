@@ -30,27 +30,34 @@ void edit_page(char * page_name, int client_socket){
     char path[256] = "data/pages/";
     strcat(path, page_name);
     int fd = open(path, O_RDONLY);
-    char * buffer = calloc(1, BUFFER_SIZE);
-    read(fd, buffer, BUFFER_SIZE);
+    if(fd == -1){
+        res->type = RES_DISP;
+        strcpy(res->body, "Page doesn't exist");
+        write(client_socket, res, BUFFER_SIZE);
+        free(res);
+    } else {
+        char * buffer = calloc(1, BUFFER_SIZE);
+        read(fd, buffer, BUFFER_SIZE);
 
-    strcpy(res->body, buffer);
-    close(fd);
-    free(buffer);
-    write(client_socket, res, BUFFER_SIZE);
-    free(res);
+        strcpy(res->body, buffer);
+        close(fd);
+        free(buffer);
+        write(client_socket, res, BUFFER_SIZE);
+        free(res);
 
-    char * new_file_buffer = calloc(1, BUFFER_SIZE);
-    if(read(client_socket, new_file_buffer, BUFFER_SIZE)){
-        int edit_fd = open(path, O_WRONLY | O_TRUNC);
-        write(edit_fd, new_file_buffer, strlen(new_file_buffer));
+        char * new_file_buffer = calloc(1, BUFFER_SIZE);
+        if(read(client_socket, new_file_buffer, BUFFER_SIZE)){
+            int edit_fd = open(path, O_WRONLY | O_TRUNC);
+            write(edit_fd, new_file_buffer, strlen(new_file_buffer));
 
-        struct response * edit_res = calloc(1, sizeof(struct response));
-        edit_res->type = RES_DISP;
-        strcpy(edit_res->body, "Page edited succesfully");
-        write(client_socket, edit_res, BUFFER_SIZE);
-        close(edit_fd);
-        free(edit_res);
-        free(new_file_buffer);
+            struct response * edit_res = calloc(1, sizeof(struct response));
+            edit_res->type = RES_DISP;
+            strcpy(edit_res->body, "Page edited succesfully");
+            write(client_socket, edit_res, BUFFER_SIZE);
+            close(edit_fd);
+            free(edit_res);
+            free(new_file_buffer);
+        }
     }
 }
 
@@ -71,8 +78,9 @@ void create_page(char * page_name, int client_socket) {
         strcpy(res->body, "Page created successfully");
     }
     close(fd);
-    write(client_socket, res, BUFFER_SIZE);
     free(res);
+
+    edit_page(page_name, client_socket);
 }
 
 void get_page(char * page_name, int client_socket){
@@ -82,12 +90,17 @@ void get_page(char * page_name, int client_socket){
     char path[256] = "data/pages/";
     strcat(path, page_name);
     int fd = open(path, O_RDONLY);
-    char * buffer = calloc(1, BUFFER_SIZE);
-    read(fd, buffer, BUFFER_SIZE);
+    if(fd == -1){
+        strcpy(res->body, "Page doesn't exist");
+        write(client_socket, res, BUFFER_SIZE);
+    } else {
+        char * buffer = calloc(1, BUFFER_SIZE);
+        read(fd, buffer, BUFFER_SIZE);
 
-    strcpy(res->body, buffer);
-    close(fd);
-    write(client_socket, res, BUFFER_SIZE);
+        strcpy(res->body, buffer);
+        close(fd);
+        write(client_socket, res, BUFFER_SIZE);
+    }
     free(res);
 }
 
@@ -103,9 +116,9 @@ void command_handler(char ** args, int client_socket) {
         edit_page(args[1], client_socket);
     } else {
         printf("Something else: %s\n", args[0]);
-        strcpy(res->body, args[0]);
+        strcpy(res->body, "Command not recognized");
+        write(client_socket, res, BUFFER_SIZE);
     }
-    write(client_socket, res, BUFFER_SIZE);
     free(res);
 }
 

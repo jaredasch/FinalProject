@@ -21,6 +21,7 @@ void handle_response(struct response * res, int server_socket){
             read(edited_fd, edited, BUFFER_SIZE);
             write(server_socket, edited, BUFFER_SIZE);
             remove(".temp_editing");
+            remove(".temp_editing~");
             close(edited_fd);
             free(edited);
 
