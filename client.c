@@ -1,14 +1,18 @@
 #include "networking.h"
-#include <string.h>
 
 void handle_response(struct response * res, int server_socket){
+    //displays buffer
     if(res->type == RES_DISP){
         printf("%s\n", res->body);
-    } else if(res->type == RES_EDIT){
+    }
+    //edits file locally
+    else if(res->type == RES_EDIT){
+        //creates dummy file for editing
         int fd = open(".temp_editing", O_WRONLY | O_CREAT, 0664);
         write(fd, res->body, strlen(res->body));
         close(fd);
 
+        //opens emacs
         if( !fork() ){
             char * args[4] = {"emacs", "-nw", ".temp_editing", NULL};
             execvp("emacs", args);
@@ -16,6 +20,7 @@ void handle_response(struct response * res, int server_socket){
             int status;
             wait( &status );
 
+            //writes edited file to socket
             char * edited = calloc(1, BUFFER_SIZE);
             int edited_fd = open(".temp_editing", O_RDONLY);
             read(edited_fd, edited, BUFFER_SIZE);
@@ -25,6 +30,7 @@ void handle_response(struct response * res, int server_socket){
             close(edited_fd);
             free(edited);
 
+            //displays server confirmation of succesfully edited file
             struct response * response_buffer = calloc(1, sizeof(struct response));
             read(server_socket, response_buffer, BUFFER_SIZE);
             printf("%s\n", response_buffer->body);

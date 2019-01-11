@@ -1,4 +1,5 @@
 #include <signal.h>
+#include <dirent.h>
 #include "networking.h"
 #include "user.h"
 
@@ -27,6 +28,7 @@ void edit_page(char * page_name, int client_socket){
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_EDIT;
 
+    //opens file
     char path[256] = "data/pages/";
     strcat(path, page_name);
     int fd = open(path, O_RDONLY);
@@ -39,17 +41,20 @@ void edit_page(char * page_name, int client_socket){
         char * buffer = calloc(1, BUFFER_SIZE);
         read(fd, buffer, BUFFER_SIZE);
 
+        //copies file into buffer
         strcpy(res->body, buffer);
         close(fd);
         free(buffer);
         write(client_socket, res, BUFFER_SIZE);
         free(res);
 
+        //reads edited file from socket, and modifies file on server
         char * new_file_buffer = calloc(1, BUFFER_SIZE);
         if(read(client_socket, new_file_buffer, BUFFER_SIZE)){
             int edit_fd = open(path, O_WRONLY | O_TRUNC);
             write(edit_fd, new_file_buffer, strlen(new_file_buffer));
 
+            //sends confirmation to client
             struct response * edit_res = calloc(1, sizeof(struct response));
             edit_res->type = RES_DISP;
             strcpy(edit_res->body, "Page edited succesfully");
@@ -104,6 +109,24 @@ void get_page(char * page_name, int client_socket){
     free(res);
 }
 
+void search_titles(char * str, int client_socket){
+  DIR* d = opendir("./data/pages");
+  int size = strlen(str);
+  struct dirent *page;
+
+  while((page = readdir(d))){
+    if (page->d_type == DT_REG){
+      char * page_name = page->d_name;
+
+      for(int i = 0; i < size; i++){
+        if(strcmp(page_name[i],str[i]) == -1){
+          return;
+        }
+      }
+    }
+  }
+}
+
 void command_handler(char ** args, int client_socket) {
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_DISP;
@@ -114,6 +137,8 @@ void command_handler(char ** args, int client_socket) {
         get_page(args[1], client_socket);
     } else if(strcmp(args[0], "edit-page") == 0){
         edit_page(args[1], client_socket);
+    } else if(strcmp(args[0], "search-titles") == 0){
+      search_titles(args[1], client_socket);
     } else {
         printf("Something else: %s\n", args[0]);
         strcpy(res->body, "Command not recognized");
