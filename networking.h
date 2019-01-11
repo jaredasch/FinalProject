@@ -16,7 +16,15 @@
 #define NETWORKING_H
 
 #define PORT "9001"
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 10240
+
+#define RES_EDIT 1
+#define RES_DISP 2
+
+struct response {
+    int type;
+    char body[BUFFER_SIZE - 1];
+};
 
 int server_setup();
 int server_connect(int sd);

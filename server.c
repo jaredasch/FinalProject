@@ -23,52 +23,117 @@ char ** parse_args(char * cmd) {
     return arg_list;
 }
 
+void edit_page(char * page_name, int client_socket){
+    struct response * res = calloc(1, sizeof(struct response));
+    res->type = RES_EDIT;
+
+    char path[256] = "data/pages/";
+    strcat(path, page_name);
+    int fd = open(path, O_RDONLY);
+    char * buffer = calloc(1, BUFFER_SIZE);
+    read(fd, buffer, BUFFER_SIZE);
+
+    strcpy(res->body, buffer);
+    close(fd);
+    free(buffer);
+    write(client_socket, res, BUFFER_SIZE);
+    free(res);
+
+    char * new_file_buffer = calloc(1, BUFFER_SIZE);
+    if(read(client_socket, new_file_buffer, BUFFER_SIZE)){
+        int edit_fd = open(path, O_WRONLY | O_TRUNC);
+        write(edit_fd, new_file_buffer, strlen(new_file_buffer));
+
+        struct response * edit_res = calloc(1, sizeof(struct response));
+        edit_res->type = RES_DISP;
+        strcpy(edit_res->body, "Page edited succesfully");
+        write(client_socket, edit_res, BUFFER_SIZE);
+        close(edit_fd);
+        free(edit_res);
+        free(new_file_buffer);
+    }
+}
+
 void create_page(char * page_name, int client_socket) {
+    struct response * res = calloc(1, sizeof(struct response));
+    res->type = RES_DISP;
+
     printf("Trying to create page %s...", page_name);
     char filename[64] = "data/pages/";
     strcat(filename, page_name);
+
     int fd = open(filename, O_CREAT | O_EXCL | O_WRONLY, 0644);
     if (fd == -1) {
+        strcpy(res->body, "Page already exists");
         printf("page creation failed\n");
-        write(client_socket, "Page already exists", BUFFER_SIZE);
     } else {
         printf("successfully created\n");
-        write(client_socket, "Page created successfully", BUFFER_SIZE);
+        strcpy(res->body, "Page created successfully");
     }
+    close(fd);
+    write(client_socket, res, BUFFER_SIZE);
+    free(res);
+}
+
+void get_page(char * page_name, int client_socket){
+    struct response * res = calloc(1, sizeof(struct response));
+    res->type = RES_DISP;
+
+    char path[256] = "data/pages/";
+    strcat(path, page_name);
+    int fd = open(path, O_RDONLY);
+    char * buffer = calloc(1, BUFFER_SIZE);
+    read(fd, buffer, BUFFER_SIZE);
+
+    strcpy(res->body, buffer);
+    close(fd);
+    write(client_socket, res, BUFFER_SIZE);
+    free(res);
 }
 
 void command_handler(char ** args, int client_socket) {
-    for(int i = 0; i < strlen(args[0]); i++){
-        printf("%c", args[0][i]);
-    }
-    // printf("args[LAST]: %s\n", args[strlen(args[0])-1]);
+    struct response * res = calloc(1, sizeof(struct response));
+    res->type = RES_DISP;
+
     if (strcmp(args[0], "create-page") == 0) {
         create_page(args[1], client_socket);
+    } else if(strcmp(args[0], "get-page") == 0){
+        get_page(args[1], client_socket);
+    } else if(strcmp(args[0], "edit-page") == 0){
+        edit_page(args[1], client_socket);
     } else {
-        write(client_socket, args[0], BUFFER_SIZE);
+        printf("Something else: %s\n", args[0]);
+        strcpy(res->body, args[0]);
     }
+    write(client_socket, res, BUFFER_SIZE);
+    free(res);
 }
 
 void authenticate_user(char ** args, int client_socket, char ** username){
+    struct response * res = calloc(1, sizeof(struct response));
+    res->type = RES_DISP;
+
     if (strcmp(args[0], "login") == 0) {
         if ( args[1] && args[2] && validate_user(args[1], args[2])) {
             *username = calloc(1, 64);
             strcpy(*username, args[1]);
-            write(client_socket, "Logged in successfully", BUFFER_SIZE);
+            strcpy(res->body, "Logged in succesfully");
         } else {
-            write(client_socket, "Username or password incorrect", BUFFER_SIZE);
+            strcpy(res->body, "Username or password incorrect");
         }
     } else if (strcmp(args[0], "signup") == 0) {
         if ( !(args[1] && args[2]) ){
-            write(client_socket, "Command use: 'signup <username> <password>'", BUFFER_SIZE);
+            strcpy(res->body, "Command use: 'signup <username> <password>'");
         } else if ( add_user(args[1], args[2])) {
-            write(client_socket, "User created succesfully", BUFFER_SIZE);
+            strcpy(res->body, "User created succesfully");
         } else {
-            write(client_socket, "Username taken", BUFFER_SIZE);
+            strcpy(res->body, "Username taken");
         }
     } else {
-        write(client_socket, "Please login with 'login <username> <password>' or create an account with signup <username> <password>'", BUFFER_SIZE);
+        strcpy(res->body, "Please login with 'login <username> <password>' or create an account with signup <username> <password>'");
     }
+
+    write(client_socket, res, BUFFER_SIZE);
 }
 
 int main() {

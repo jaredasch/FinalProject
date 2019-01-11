@@ -25,6 +25,7 @@ int add_user(char * username, char * password){
         return 0;
     } else {
         write(f, &new_user, sizeof(struct user));
+        close(f);
         return 1;
     }
 }
@@ -40,6 +41,7 @@ int validate_user(char * username, char * password){
     } else {
         struct user u;
         read(f, &u, sizeof(struct user));
+        close(f);
         return !strcmp(u.password, password);
     }
 }
