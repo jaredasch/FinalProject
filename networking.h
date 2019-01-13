@@ -22,6 +22,8 @@
 
 #define RES_EDIT 1
 #define RES_DISP 2
+#define RES_EXIT 3
+
 
 struct response {
     int type;

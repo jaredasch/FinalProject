@@ -5,17 +5,14 @@
 
 static void sighandler(int signo) {
     if (signo == SIGINT) {
-        printf("Removing WKP....");
-        remove("wkp");
-        printf("Done\n");
+        //close(client_socket);
         exit(1);
     }
 }
 
 char ** parse_args(char * cmd) {
     char ** arg_list = calloc(sizeof(char * ), 25);
-    for (int i = 0;
-        (arg_list[i] = strsep( & cmd, " ")); i++) {
+    for (int i = 0; (arg_list[i] = strsep( & cmd, " ")); i++) {
         // If the arg is an empty string (extra spaces), remove it
         if ( * arg_list[i] == 0) {
             i--;
@@ -127,6 +124,16 @@ void search_titles(char * str, int client_socket){
   }
 }
 
+void server_exit(int client_socket){
+  struct response * res = calloc(1, sizeof(struct response));
+  res->type = RES_EXIT;
+  write(client_socket,res,BUFFER_SIZE);
+  close(client_socket);
+  printf("(subserver %d) exiting\n", getpid());
+  exit(0);
+}
+
+
 void command_handler(char ** args, int client_socket) {
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_DISP;
@@ -185,19 +192,40 @@ int main() {
 
         int client_socket = server_connect(listen_socket);
 
-        char data[BUFFER_SIZE];
         int f = fork();
-        if (f == 0) {
+        if (f == 0) { //subserver
+            printf("(subserver %d) forked\n", getpid());
+            char * data = calloc(1, BUFFER_SIZE);
             while (read(client_socket, data, BUFFER_SIZE)) {
-                char ** args = parse_args(data);
-                if (!username) {
-                    authenticate_user(args, client_socket, &username);
-                } else {
-                    printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
-                    command_handler(args, client_socket);
+                //printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
+                data[strlen(data) - 1] = 0;
+                //printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
+                if(strlen(data) == 0){ //if only a \n was sent through socket
+                  struct response * res = calloc(1, sizeof(struct response));
+                  res->type = RES_DISP;
+                  strcpy(res->body, "You put no command u idiot");
+                  write(client_socket, res, BUFFER_SIZE);
+                  free(res);
                 }
-            }
-        }
+                else{
+                  char ** args = parse_args(data);
+
+                  if(strcmp(args[0], "exit") == 0){ //checks if user wants to exit
+                    printf("(subserver %d) exiting\n", getpid());
+                    server_exit(client_socket);
+                  }
+                  if (!username) { //makes sure user logs in
+                      authenticate_user(args, client_socket, &username);
+                    }
+                  else {
+                    command_handler(args, client_socket);
+                    }
+                }
+            } //end while loop
+            close(client_socket);
+            printf("(subserver %d) closed socket\n", getpid());
+            exit(0);
+        } //end of subserver
         else{
           close(client_socket);
       }

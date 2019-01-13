@@ -1,6 +1,20 @@
 #include "networking.h"
+int server_socket;
+
+static void sighandler(int signo) {
+    if (signo == SIGINT) {
+        close(server_socket);
+        printf("client: closed socket\n");
+        exit(1);
+    }
+}
 
 void handle_response(struct response * res, int server_socket){
+    //exits
+    if(res->type == RES_EXIT){
+        close(server_socket);
+        exit(0);
+    }
     //displays buffer
     if(res->type == RES_DISP){
         printf("%s\n", res->body);
@@ -39,7 +53,7 @@ void handle_response(struct response * res, int server_socket){
 }
 
 int main(int argc, char **argv) {
-    int server_socket;
+    signal(SIGINT, sighandler);
 
     if (argc == 2){
       server_socket = client_setup( argv[1]);
@@ -52,8 +66,8 @@ int main(int argc, char **argv) {
         char * buffer = calloc(BUFFER_SIZE, sizeof(char *));
         printf("slicky-wiki$ ");
         fgets(buffer, BUFFER_SIZE, stdin);
-        buffer[strlen(buffer) - 1] = 0;
 
+        //printf("client: sending \"%s\"\n",buffer);
         write(server_socket, buffer, BUFFER_SIZE);
 
         struct response * res = calloc(1, sizeof(struct response));
