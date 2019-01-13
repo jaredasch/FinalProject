@@ -8,3 +8,10 @@ Changed forking server to work with sockets instead of pipes.
 01-10-2019 -- Colin Hosking
 Commented code
 Worked on implementing search functionality
+
+01-12-2019 -- Colin Hosking
+Fixed bug where newlines sent through buffer broke everything
+
+01-13-2019 -- Colin Hosking
+Added exit command
+Cleaned up socketing so that sockets close before program exits
