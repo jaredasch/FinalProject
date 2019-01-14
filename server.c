@@ -110,18 +110,28 @@ void search_titles(char * str, int client_socket){
   DIR* d = opendir("./data/pages");
   int size = strlen(str);
   struct dirent *page;
+  int count = 0;
+  char ** ans = calloc(50, sizeof(char *));
 
   while((page = readdir(d))){
-    if (page->d_type == DT_REG){
+    if (page->d_type == DT_REG){ //if item is a file
       char * page_name = page->d_name;
-
-      for(int i = 0; i < size; i++){
-        if(strcmp(page_name[i],str[i]) == -1){
-          return;
-        }
+      char * page_name_cpy = page->d_name;
+      page_name[size] = 0;
+      if (strcmp(page_name,str) == 0){
+        ans[count] = page_name_cpy;
+        count++;
       }
     }
   }
+  char * buffer = calloc(BUFFER_SIZE, sizeof(char *));
+
+  //MAKE BUFFER
+
+  struct response * res = calloc(1, sizeof(struct response));
+  res->type = RES_DISP;
+  strcpy(res->body,buffer);
+  write(client_socket, res, BUFFER_SIZE);
 }
 
 void server_exit(int client_socket){
@@ -138,13 +148,13 @@ void command_handler(char ** args, int client_socket) {
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_DISP;
 
-    if (strcmp(args[0], "create-page") == 0) {
+    if (strcmp(args[0], "create-page") == 0 && args[1]) {
         create_page(args[1], client_socket);
-    } else if(strcmp(args[0], "get-page") == 0){
+    } else if(strcmp(args[0], "get-page" && args[1]) == 0){
         get_page(args[1], client_socket);
-    } else if(strcmp(args[0], "edit-page") == 0){
+    } else if(strcmp(args[0], "edit-page" && args[1]) == 0){
         edit_page(args[1], client_socket);
-    } else if(strcmp(args[0], "search-titles") == 0){
+    } else if(strcmp(args[0], "search-titles" && args[1]) == 0){
       search_titles(args[1], client_socket);
     } else {
         printf("Something else: %s\n", args[0]);
