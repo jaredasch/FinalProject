@@ -4,7 +4,7 @@ int server_socket;
 static void sighandler(int signo) {
     if (signo == SIGINT) {
         close(server_socket);
-        printf("client: closed socket\n");
+        printf("\nclient: closed socket\n");
         exit(1);
     }
 }
