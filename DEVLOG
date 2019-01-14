@@ -15,3 +15,4 @@ Fixed bug where newlines sent through buffer broke everything
 01-13-2019 -- Colin Hosking
 Added exit command
 Cleaned up socketing so that sockets close before program exits
+Fixed bug where commands with only 1 arg would break when passed into server functions
