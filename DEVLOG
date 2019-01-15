@@ -20,18 +20,19 @@ Commands added: edit-page
 
 01-10-2019 -- Colin Hosking
 Commented code
-Worked on implementing page listing and search functionality (in progress)
-Commands added: show-pages
-
-01-12-2019 -- Colin Hosking
+Worked on implementing search functionality (in progress)
 Fixed bug where newlines sent through buffer broke everything
 
 01-13-2019 -- Colin Hosking
-Added exit command
 Cleaned up socketing so that sockets close before program exits
 Fixed bug where commands with only 1 arg would break when passed into server functions
+Commands added: exit
 
 01-14-2019 -- Colin Hosking
 Added show-pages command
 Cleaned up signal-catching in server.c
 Made client_socket a global var
+
+01-15-2019 -- Jared Asch
+Fixed minor bug where user could access the entire system of the server
+Populated a few pages on the wiki for users

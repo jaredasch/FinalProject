@@ -141,7 +141,8 @@ void search_titles(char * str){
   while((page = readdir(d))){
     if (page->d_type == DT_REG){ //if item is a file
       char * page_name = page->d_name;
-      char * page_name_cpy = page->d_name;
+      char * page_name_cpy;
+      strcpy(page_name_cpy, page->d_name);
       page_name[size] = 0;
       if (strcmp(page_name,str) == 0){
         ans[count] = page_name_cpy;
@@ -149,13 +150,13 @@ void search_titles(char * str){
       }
     }
   }
-  char * buffer = calloc(BUFFER_SIZE, sizeof(char *));
-
-  //MAKE BUFFER
 
   struct response * res = calloc(1, sizeof(struct response));
   res->type = RES_DISP;
-  strcpy(res->body,buffer);
+  while(*ans){
+    strcat(res->body, *(ans++));
+    strcat(res->body, "\n");
+  }
   write(client_socket, res, BUFFER_SIZE);
 }
 
