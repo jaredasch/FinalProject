@@ -25,6 +25,14 @@ void edit_page(char * page_name, int client_socket){
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_EDIT;
 
+    if(page_name[0] == '.'){
+        res->type = RES_DISP;
+        strcpy(res->body, "Invalid file path");
+        write(client_socket, res, BUFFER_SIZE);
+        free(res);
+        return;
+    }
+
     //opens file
     char path[256] = "data/pages/";
     strcat(path, page_name);
@@ -67,6 +75,13 @@ void create_page(char * page_name, int client_socket) {
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_DISP;
 
+    if(page_name[0] == '.'){
+        strcpy(res->body, "Invalid file path");
+        write(client_socket, res, BUFFER_SIZE);
+        free(res);
+        return;
+    }
+
     printf("Trying to create page %s...", page_name);
     char filename[64] = "data/pages/";
     strcat(filename, page_name);
@@ -88,6 +103,14 @@ void create_page(char * page_name, int client_socket) {
 void get_page(char * page_name, int client_socket){
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_DISP;
+
+    if(page_name[0] == '.'){
+        res->type = RES_DISP;
+        strcpy(res->body, "Invalid file path");
+        write(client_socket, res, BUFFER_SIZE);
+        free(res);
+        return;
+    }
 
     char path[256] = "data/pages/";
     strcat(path, page_name);
