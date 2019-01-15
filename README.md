@@ -12,5 +12,5 @@ Later
 
 WIll do later
 
-## Known Bugss ##
+## Known Bugs ##
 
