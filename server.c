@@ -3,9 +3,11 @@
 #include "networking.h"
 #include "user.h"
 
+int client_socket;
+
 static void sighandler(int signo) {
     if (signo == SIGINT) {
-        //close(client_socket);
+        close(client_socket);
         exit(1);
     }
 }
@@ -21,7 +23,7 @@ char ** parse_args(char * cmd) {
     return arg_list;
 }
 
-void edit_page(char * page_name, int client_socket){
+void edit_page(char * page_name){
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_EDIT;
 
@@ -71,7 +73,7 @@ void edit_page(char * page_name, int client_socket){
     }
 }
 
-void create_page(char * page_name, int client_socket) {
+void create_page(char * page_name) {
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_DISP;
 
@@ -97,10 +99,10 @@ void create_page(char * page_name, int client_socket) {
     close(fd);
     free(res);
 
-    edit_page(page_name, client_socket);
+    edit_page(page_name);
 }
 
-void get_page(char * page_name, int client_socket){
+void get_page(char * page_name){
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_DISP;
 
@@ -129,7 +131,7 @@ void get_page(char * page_name, int client_socket){
     free(res);
 }
 
-void search_titles(char * str, int client_socket){
+void search_titles(char * str){
   DIR* d = opendir("data/pages");
   int size = strlen(str);
   struct dirent *page;
@@ -157,7 +159,7 @@ void search_titles(char * str, int client_socket){
   write(client_socket, res, BUFFER_SIZE);
 }
 
-void search_contents(char * str, int client_socket){
+void search_contents(char * str){
   DIR* d = opendir("data/pages");
   struct dirent *page;
 
@@ -172,7 +174,7 @@ void search_contents(char * str, int client_socket){
     }
 }
 
-void show_pages(int client_socket){
+void show_pages(){
   DIR* d = opendir("data/pages");
   struct dirent *page;
   char * buffer = calloc(BUFFER_SIZE, sizeof(char *));
@@ -180,9 +182,13 @@ void show_pages(int client_socket){
 
   while((page = readdir(d))){
     if (page->d_type == DT_REG){ //if item is a file
-      char * page_name = page->d_name;
-      if(strcmp(&page_name[0],".") != 0){
-        strcat(buffer,page_name);
+      char * page_name;
+      strcpy(page_name,page->d_name);
+      char * temp = page->d_name;
+      page_name[1] = 0;
+      //printf("%s\n",temp);
+      if(strcmp(page_name,".") != 0){
+        strcat(buffer,temp);
         strcat(buffer,"\n");
       }
     }
@@ -194,7 +200,7 @@ void show_pages(int client_socket){
   write(client_socket, res, BUFFER_SIZE);
 }
 
-void server_exit(int client_socket){
+void server_exit(){
   struct response * res = calloc(1, sizeof(struct response));
   res->type = RES_EXIT;
   write(client_socket,res,BUFFER_SIZE);
@@ -204,20 +210,20 @@ void server_exit(int client_socket){
 }
 
 
-void command_handler(char ** args, int client_socket) {
+void command_handler(char ** args) {
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_DISP;
 
     if (strcmp(args[0], "create-page") == 0 && args[1]) {
-        create_page(args[1], client_socket);
+        create_page(args[1]);
     } else if(strcmp(args[0], "get-page") == 0 && args[1]){
-        get_page(args[1], client_socket);
+        get_page(args[1]);
     } else if(strcmp(args[0], "edit-page") == 0 && args[1]){
-        edit_page(args[1], client_socket);
+        edit_page(args[1]);
     } else if(strcmp(args[0], "search-titles") == 0 && args[1]){
-      search_titles(args[1], client_socket);
+      search_titles(args[1]);
     } else if(strcmp(args[0], "show-pages") == 0){
-        show_pages(client_socket);
+        show_pages();
     } else {
         printf("Something else: %s\n", args[0]);
         strcpy(res->body, "Command not recognized");
@@ -226,7 +232,7 @@ void command_handler(char ** args, int client_socket) {
     free(res);
 }
 
-void authenticate_user(char ** args, int client_socket, char ** username){
+void authenticate_user(char ** args, char ** username){
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_DISP;
 
@@ -262,7 +268,7 @@ int main() {
     while (1) {
         char * username = NULL;
 
-        int client_socket = server_connect(listen_socket);
+        client_socket = server_connect(listen_socket);
 
         int f = fork();
         if (f == 0) { //subserver
@@ -284,13 +290,13 @@ int main() {
 
                   if(strcmp(args[0], "exit") == 0){ //checks if user wants to exit
                     printf("(subserver %d) exiting\n", getpid());
-                    server_exit(client_socket);
+                    server_exit();
                   }
                   if (!username) { //makes sure user logs in
-                      authenticate_user(args, client_socket, &username);
+                      authenticate_user(args, &username);
                     }
                   else {
-                    command_handler(args, client_socket);
+                    command_handler(args);
                     }
                 }
             } //end while loop
