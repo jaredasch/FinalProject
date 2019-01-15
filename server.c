@@ -183,7 +183,7 @@ void show_pages(){
 
   while((page = readdir(d))){
     if (page->d_type == DT_REG){ //if item is a file
-      char * page_name;
+      char * page_name[256];
       strcpy(page_name,page->d_name);
       char * temp = page->d_name;
       page_name[1] = 0;
