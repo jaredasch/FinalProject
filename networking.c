@@ -1,10 +1,18 @@
 #include "networking.h"
 
+void error_check( int i, char *s ) {
+  if ( i < 0 ) {
+    printf("[%s] error %d: %s\n", s, errno, strerror(errno) );
+    exit(1);
+  }
+}
+
   int server_setup() {
     int sd;
 
     //creates socket
     sd = socket( AF_INET, SOCK_STREAM, 0 );
+    error_check( sd, "server socket" );
     printf("server: socket created\n");
 
     //setup structs for getaddrinfo
@@ -16,11 +24,13 @@
     getaddrinfo(NULL, PORT, hints, &results); //NULL means use local address
 
     //bind the socket to address and port
-    bind( sd, results->ai_addr, results->ai_addrlen );
+    int i = bind( sd, results->ai_addr, results->ai_addrlen );
+    error_check( i, "server bind" );
     printf("server: socket bound\n");
 
     //set socket to listening
-    listen(sd, 10);
+    i = listen(sd, 10);
+    error_check( i, "server listen" );
     printf("server: socket in listen state\n");
 
     free(hints);
@@ -33,6 +43,7 @@
 
     //create socket
     sd = socket( AF_INET, SOCK_STREAM, 0 );
+    error_check( sd, "client socket" );
 
     //run getaddrinfo
     struct addrinfo * hints, * results;
@@ -42,7 +53,8 @@
     getaddrinfo(server, PORT, hints, &results);
 
     //connect to the server
-    connect( sd, results->ai_addr, results->ai_addrlen );
+    int i  = connect( sd, results->ai_addr, results->ai_addrlen );
+    error_check( i, "client connect" );
 
     free(hints);
     freeaddrinfo(results);
