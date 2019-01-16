@@ -72,7 +72,6 @@ int main(int argc, char **argv) {
 
         struct response * res = calloc(1, sizeof(struct response));
         read(server_socket, res, BUFFER_SIZE);
-        printf("client: reading \"%s\"\n",res);
 
         handle_response(res, server_socket);
     }

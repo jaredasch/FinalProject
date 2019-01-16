@@ -311,6 +311,7 @@ int main() {
                       authenticate_user(args, &username);
                     }
                   else {
+                    printf("goin into cmds\n");
                     command_handler(args);
                     }
                 }
