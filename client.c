@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
         write(server_socket, buffer, BUFFER_SIZE);
 
         struct response * res = calloc(1, sizeof(struct response));
-        read(server_socket, res->body, BUFFER_SIZE);
+        read(server_socket, res, BUFFER_SIZE);
 
         handle_response(res, server_socket);
     }
