@@ -66,12 +66,12 @@ int main(int argc, char **argv) {
         char * buffer = calloc(BUFFER_SIZE, sizeof(char *));
         printf("slicky-wiki$ ");
         fgets(buffer, BUFFER_SIZE, stdin);
-
-        //printf("client: sending \"%s\"\n",buffer);
+        *strchr(buffer, '\n') = 0;
+        printf("client: sending \"%s\"\n",buffer);
         write(server_socket, buffer, BUFFER_SIZE);
 
         struct response * res = calloc(1, sizeof(struct response));
-        read(server_socket, res, BUFFER_SIZE);
+        read(server_socket, res->body, BUFFER_SIZE);
 
         handle_response(res, server_socket);
     }

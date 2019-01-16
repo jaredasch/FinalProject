@@ -290,8 +290,8 @@ int main() {
             printf("(subserver %d) forked\n", getpid());
             char * data = calloc(1, BUFFER_SIZE);
             while (read(client_socket, data, BUFFER_SIZE)) {
-                //printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
-                data[strlen(data) - 1] = 0;
+                printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
+                //data[strlen(data) - 1] = 0;
                 //printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
                 if(strlen(data) == 0){ //if only a \n was sent through socket
                   struct response * res = calloc(1, sizeof(struct response));
