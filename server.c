@@ -137,12 +137,12 @@ void search_titles(char * str){
   struct dirent *page;
   int count = 0; //number of hits
   char ** ans = calloc(50, sizeof(char *));
+  char * page_name = calloc(256, 1);
 
   while((page = readdir(d))){
     if (page->d_type == DT_REG){ //if item is a file
-      char * page_name = page->d_name;
-      char * page_name_cpy;
-      strcpy(page_name_cpy, page->d_name);
+      char * page_name_cpy = page->d_name;
+      strcpy(page_name, page->d_name);
       page_name[size] = 0;
       if (strcmp(page_name,str) == 0){
         ans[count] = page_name_cpy;
@@ -150,14 +150,22 @@ void search_titles(char * str){
       }
     }
   }
-
+  closedir(d);
   struct response * res = calloc(1, sizeof(struct response));
   res->type = RES_DISP;
+  strcat(res->body,"----[");
+  char num[50];
+  sprintf(num, "%d", count);
+  strcat(res->body,num);
+  strcat(res->body,"] Hits Found----\n");
+
   while(*ans){
     strcat(res->body, *(ans++));
     strcat(res->body, "\n");
   }
+  strcat(res->body,"------------------------\n");
   write(client_socket, res, BUFFER_SIZE);
+  free(res);
 }
 
 void search_contents(char * str){
@@ -180,10 +188,10 @@ void show_pages(){
   struct dirent *page;
   char * buffer = calloc(BUFFER_SIZE, sizeof(char *));
   strcat(buffer,"----Pages----\n");
+  char * page_name = calloc(256, 1);
 
   while((page = readdir(d))){
     if (page->d_type == DT_REG){ //if item is a file
-      char * page_name[256];
       strcpy(page_name,page->d_name);
       char * temp = page->d_name;
       page_name[1] = 0;
@@ -194,11 +202,15 @@ void show_pages(){
       }
     }
   }
+  closedir(d);
+  free(page_name);
   buffer[strlen(buffer)-1] = 0;
   struct response * res = calloc(1, sizeof(struct response));
   res->type = RES_DISP;
   strcpy(res->body,buffer);
+  strcat(res->body,"\n--------------\n");
   write(client_socket, res, BUFFER_SIZE);
+  free(res);
 }
 
 void server_exit(){
@@ -207,6 +219,7 @@ void server_exit(){
   write(client_socket,res,BUFFER_SIZE);
   close(client_socket);
   printf("(subserver %d) exiting\n", getpid());
+  free(res);
   exit(0);
 }
 
@@ -258,6 +271,7 @@ void authenticate_user(char ** args, char ** username){
     }
 
     write(client_socket, res, BUFFER_SIZE);
+    free(res);
 }
 
 int main() {
