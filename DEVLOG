@@ -36,3 +36,7 @@ Made client_socket a global var
 01-15-2019 -- Jared Asch
 Fixed minor bug where user could access the entire system of the server
 Populated a few pages on the wiki for users
+
+01-15-2019 -- Colin Hosking
+Command added/fixed: search-titles
+Fixed bug where memory was being freed that was never malloced in the first place
