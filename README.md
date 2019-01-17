@@ -2,15 +2,40 @@
 ## Jared Asch and Colin Hosking - Systems Level Programming Period 5 ##
 
 ## Project Description ##
-LocalWiki is a wiki for culminating any and all knowledge on assorted topics. Users will be able to add their browse existing pages, search all of the pages, add their own pages, and edit existing pages. Our wiki will be available over a network connection and all of the data will be stored locally on the server. When first connecting to our server, clients will be asked a nickname to go by, and we may add in accounts in later versions.
+Slicky-Wiki is a wiki for culminating any and all knowledge on assorted topics. Users can add their browse existing pages, search all of the pages (by title or keyword), add their own pages, and edit existing pages. Our wiki will be available over a network connection and all of the data will be stored locally on a server. When first connecting to our server, clients will be asked to login, or prompted to create an account.
 
 ## Running the Server ##
 
-Later
+????
 
 ## How to Use the Wiki ##
+After connecting to the server, the user will encounter a command prompt.
 
-WIll do later
+Login Commands:
+* **signup -username- -password-**
+  - Creates account
+* **login -username- -password-**
+  - Logs into existing account
+* **exit**
+  - Terminates client
+
+User Commands:
+
+* **create-page -name-**
+  - Creates page with filename -name- and prompts user to enter contents in emacs
+* **get-page -name-**
+  - Displays page with filename -name-
+* **edit-page -name-**
+  - Opens page with filename -name- in emacs
+* **search-titles -keyword-**
+  - Displays list of pages beginning with -keyword-
+* **search-contents -keyword-**
+  - Searches every page and displays number of instances of -keyword- in each page
+* **show-pages**
+  - Displays list of all page names
+* **exit**
+  - Terminates client
 
 ## Known Bugs ##
 
+If the server terminates before all clients have exited, the server will not run again because of the address being in use. To work around this, either wait until the address opens up or modify the port number in networking.h
