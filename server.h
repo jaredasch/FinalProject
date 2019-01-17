@@ -25,10 +25,9 @@ struct response {
 };
 
 static void sighandler(int signo);
-char ** parse_args(char * cmd);
+char ** parse_args(char * cmd);x
 void command_handler(char ** args);
 void authenticate_user(char ** args, char ** username);
-void no_command();
 
 void edit_page(char * page_name);
 void create_page(char * page_name);

@@ -54,6 +54,10 @@ void handle_response(struct response * res, int server_socket){
     }
 }
 
+void no_command(){
+  printf("Please enter a command!\n");
+}
+
 int main(int argc, char **argv) {
     signal(SIGINT, sighandler);
 
@@ -70,11 +74,17 @@ int main(int argc, char **argv) {
         fgets(buffer, BUFFER_SIZE, stdin);
         *strchr(buffer, '\n') = 0;
         //printf("client: sending \"%s\"\n",buffer);
-        write(server_socket, buffer, BUFFER_SIZE);
 
-        struct response * res = calloc(1, sizeof(struct response));
-        read(server_socket, res, BUFFER_SIZE);
+	if(!strlen(buffer)){
+	  no_command();
+	}
+	else{
+	  write(server_socket, buffer, BUFFER_SIZE);
 
-        handle_response(res, server_socket);
+	  struct response * res = calloc(1, sizeof(struct response));
+	  read(server_socket, res, BUFFER_SIZE);
+	  
+	  handle_response(res, server_socket);
+	}
     }
 }

@@ -6,7 +6,9 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <string.h>
+#include <signal.h>
 
 #ifndef CLIENT_H
 #define CLIENT_H
@@ -23,5 +25,6 @@ struct response {
 
 static void sighandler(int signo);
 void handle_response(struct response * res, int server_socket);
+void no_command();
 
 #endif

@@ -313,15 +313,6 @@ void authenticate_user(char ** args, char ** username){
     free(res);
 }
 
-void no_command(){
-  struct response * res = calloc(1, sizeof(struct response));
-  res->type = RES_DISP;
-  strcpy(res->body, "Please enter a command\n");
-  write(client_socket, res, BUFFER_SIZE);
-  free(res);
-}
-
-
 int main() {
     int listen_socket;
 
@@ -338,25 +329,22 @@ int main() {
             printf("(subserver %d) forked\n", getpid());
             char * data = calloc(1, BUFFER_SIZE);
             while (read(client_socket, data, BUFFER_SIZE)) {
-                printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
-
-                if(strlen(data) == 0){ //if only a \n was sent through socket
-                  no_command();
-                }
-                else{
-                  char ** args = parse_args(data);
-
-                  if(strcmp(args[0], "exit") == 0){ //checks if user wants to exit
-                    printf("(subserver %d) exiting\n", getpid());
-                    server_exit();
-                  }
-                  if (!username) { //makes sure user logs in
-                      authenticate_user(args, &username);
-                    }
-                  else {
-                    command_handler(args);
-                    }
-                }
+	      printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
+	      
+	      
+	      char ** args = parse_args(data);
+	      
+	      if(strcmp(args[0], "exit") == 0){ //checks if user wants to exit
+		printf("(subserver %d) exiting\n", getpid());
+		server_exit();
+	      }
+	      if (!username) { //makes sure user logs in
+		authenticate_user(args, &username);
+	      }
+	      else {
+		command_handler(args);
+	      }
+              
             } //end while loop
             close(client_socket);
             printf("(subserver %d) closed socket\n", getpid());
