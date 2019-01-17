@@ -1,17 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <sys/wait.h>
 #include <string.h>
 
 #ifndef NETWORKING_H
@@ -20,15 +16,6 @@
 #define PORT "9001"
 #define BUFFER_SIZE 6000
 
-#define RES_EDIT 1
-#define RES_DISP 2
-#define RES_EXIT 3
-
-
-struct response {
-    int type;
-    char body[BUFFER_SIZE - 1];
-};
 
 void error_check(int i, char *s);
 int server_setup();

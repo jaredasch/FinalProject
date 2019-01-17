@@ -1,4 +1,6 @@
 #include "networking.h"
+#include "client.h"
+
 int server_socket;
 
 static void sighandler(int signo) {

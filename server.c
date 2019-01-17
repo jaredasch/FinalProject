@@ -1,7 +1,7 @@
-#include <signal.h>
-#include <dirent.h>
+
 #include "networking.h"
 #include "user.h"
+#include "server.h"
 
 int client_socket;
 
