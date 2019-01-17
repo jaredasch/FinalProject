@@ -40,3 +40,6 @@ Populated a few pages on the wiki for users
 01-15-2019 -- Colin Hosking
 Command added/fixed: search-titles
 Fixed bug where memory was being freed that was never malloced in the first place
+
+01-16-2019 -- Colin Hosking
+Fixed networking to work and not break after one buffer was passed through socket.

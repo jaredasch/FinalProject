@@ -18,7 +18,7 @@
 #define NETWORKING_H
 
 #define PORT "9001"
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 6000
 
 #define RES_EDIT 1
 #define RES_DISP 2

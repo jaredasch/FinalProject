@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         printf("slicky-wiki$ ");
         fgets(buffer, BUFFER_SIZE, stdin);
         *strchr(buffer, '\n') = 0;
-        printf("client: sending \"%s\"\n",buffer);
+        //printf("client: sending \"%s\"\n",buffer);
         write(server_socket, buffer, BUFFER_SIZE);
 
         struct response * res = calloc(1, sizeof(struct response));

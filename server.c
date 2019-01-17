@@ -159,28 +159,65 @@ void search_titles(char * str){
   strcat(res->body,num);
   strcat(res->body,"] Hits Found----\n");
 
-  while(*ans){
-    strcat(res->body, *(ans++));
+  int i = 0;
+  while(ans[i]){
+    strcat(res->body, ans[i]);
     strcat(res->body, "\n");
+    i++;
   }
-  strcat(res->body,"------------------------\n");
+  strcat(res->body,"----------------------\n");
   write(client_socket, res, BUFFER_SIZE);
+  free(ans);
+  free(page_name);
   free(res);
 }
 
 void search_contents(char * str){
   DIR* d = opendir("data/pages");
   struct dirent *page;
+  char * page_name = calloc(256, 1);
+  int count; //number of hits
+  struct response * res = calloc(1, sizeof(struct response));
+  res->type = RES_DISP;
+  strcat(res->body,"----------------------\n");
 
   while((page = readdir(d))){
     if (page->d_type == DT_REG){ //if item is a file
-      char * page_name = page->d_name;
-      int fd = open(page_name, O_RDONLY);
+      strcpy(page_name, page->d_name);
+
+      char * path = calloc(256, 1);
+      strcat(path,"data/pages/");
+      strcat(path,page_name);
+
+      printf("[%s]\n",page_name);
+      int fd = open(path, O_RDONLY);
 
       char * page_contents = calloc(1, BUFFER_SIZE);
-      read(fd, page_contents, BUFFER_SIZE);
+      int n = read(fd, page_contents, BUFFER_SIZE);
+      //printf("open: %d read bytes: %d\n",fd,n);
+
+      count = 0;
+      while ((page_contents = strstr(page_contents,str))){
+        page_contents[0] = *(str)+1;
+        count++;
+      }
+      if(count>0){
+        char num[50];
+        sprintf(num, "%d", count);
+        strcat(res->body,num);
+        strcat(res->body," Hit(s) found in page '");
+        strcat(res->body, page_name);
+        strcat(res->body, "'\n");
+        close(fd);
+        }
       }
     }
+    closedir(d);
+    //printf("writing [%s] \n",res->body);
+    strcat(res->body,"----------------------\n");
+    write(client_socket, res, BUFFER_SIZE);
+    free(page_name);
+    free(res);
 }
 
 void show_pages(){
@@ -236,10 +273,12 @@ void command_handler(char ** args) {
         edit_page(args[1]);
     } else if(strcmp(args[0], "search-titles") == 0 && args[1]){
       search_titles(args[1]);
+    } else if(strcmp(args[0], "search-contents") == 0 && args[1]){
+      search_contents(args[1]);
     } else if(strcmp(args[0], "show-pages") == 0){
         show_pages();
     } else {
-        printf("Something else: %s\n", args[0]);
+        printf("(subserver %d) something else: %s\n",getpid(), args[0]);
         strcpy(res->body, "Command not recognized");
         write(client_socket, res, BUFFER_SIZE);
     }
@@ -274,6 +313,15 @@ void authenticate_user(char ** args, char ** username){
     free(res);
 }
 
+void no_command(){
+  struct response * res = calloc(1, sizeof(struct response));
+  res->type = RES_DISP;
+  strcpy(res->body, "Please enter a command\n");
+  write(client_socket, res, BUFFER_SIZE);
+  free(res);
+}
+
+
 int main() {
     int listen_socket;
 
@@ -291,14 +339,9 @@ int main() {
             char * data = calloc(1, BUFFER_SIZE);
             while (read(client_socket, data, BUFFER_SIZE)) {
                 printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
-                //data[strlen(data) - 1] = 0;
-                //printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
+
                 if(strlen(data) == 0){ //if only a \n was sent through socket
-                  struct response * res = calloc(1, sizeof(struct response));
-                  res->type = RES_DISP;
-                  strcpy(res->body, "You put no command u idiot");
-                  write(client_socket, res, BUFFER_SIZE);
-                  free(res);
+                  no_command();
                 }
                 else{
                   char ** args = parse_args(data);
@@ -311,7 +354,6 @@ int main() {
                       authenticate_user(args, &username);
                     }
                   else {
-                    printf("goin into cmds\n");
                     command_handler(args);
                     }
                 }
