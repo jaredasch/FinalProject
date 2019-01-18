@@ -84,6 +84,19 @@ void create_page(char * page_name) {
         return;
     }
 
+    /*DIR* d = opendir("data/pages");
+    struct dirent *page;
+    while((page = readdir(d))){
+      if (page->d_type == DT_REG){ //if item is a file
+        char * page_name_cpy = page->d_name;
+        page_name[size] = 0;
+        if (strcmp(page_name,str) == 0){
+          ans[count] = page_name_cpy;
+          count++;
+        }
+      }
+    }*/
+
     printf("Trying to create page %s...", page_name);
     char filename[64] = "data/pages/";
     strcat(filename, page_name);
@@ -92,14 +105,18 @@ void create_page(char * page_name) {
     if (fd == -1) {
         strcpy(res->body, "Page already exists");
         printf("page creation failed\n");
+        write(client_socket, res, BUFFER_SIZE);
+        close(fd);
+        free(res);
+        return;
     } else {
         printf("successfully created\n");
-        strcpy(res->body, "Page created successfully");
-    }
+
     close(fd);
     free(res);
 
     edit_page(page_name);
+  }
 }
 
 void get_page(char * page_name){
@@ -319,6 +336,9 @@ int main() {
     listen_socket = server_setup();
     signal(SIGINT, sighandler);
 
+    /*int optval = 1;
+    setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int));
+*/
     while (1) {
         char * username = NULL;
 
@@ -330,10 +350,10 @@ int main() {
             char * data = calloc(1, BUFFER_SIZE);
             while (read(client_socket, data, BUFFER_SIZE)) {
 	      printf("(subserver %d) Recieved \"%s\" from client\n", getpid(), data);
-	      
-	      
+
+
 	      char ** args = parse_args(data);
-	      
+
 	      if(strcmp(args[0], "exit") == 0){ //checks if user wants to exit
 		printf("(subserver %d) exiting\n", getpid());
 		server_exit();
@@ -344,7 +364,7 @@ int main() {
 	      else {
 		command_handler(args);
 	      }
-              
+
             } //end while loop
             close(client_socket);
             printf("(subserver %d) closed socket\n", getpid());

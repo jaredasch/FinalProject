@@ -25,7 +25,7 @@ struct response {
 };
 
 static void sighandler(int signo);
-char ** parse_args(char * cmd);x
+char ** parse_args(char * cmd);
 void command_handler(char ** args);
 void authenticate_user(char ** args, char ** username);
 

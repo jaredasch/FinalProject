@@ -13,7 +13,7 @@
 #ifndef NETWORKING_H
 #define NETWORKING_H
 
-#define PORT "9001"
+#define PORT "9002"
 #define BUFFER_SIZE 6000
 
 
