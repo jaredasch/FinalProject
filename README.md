@@ -57,4 +57,4 @@ If the server terminates before all clients have exited, the server will not run
 
 ## Attempted Features ##
 
-We tried implementing semaphores to ensure no user could edit the same page at the same time. Whenever the edit-page function was called, the server created a semaphore using the page name to generate a unique key. edit-page also checked if such a semaphore existed, and if it was available. After the user edited, the semaphore was deleted. We got this feature working locally on MacOS, but it did not run on Linux. It also was very buggy when connecting not using the test IP, and the buffers would not send at the right time.
+We tried implementing semaphores to ensure no user could edit the same page at the same time. Whenever the edit-page function was called, the server created a semaphore using the page name to generate a unique key. edit-page also checked if such a semaphore existed, and if it was available. After the user edited, the semaphore was deleted. We got this feature working locally on MacOS, but it did not run on Linux. It also was very buggy when connecting not using the test IP, and the buffers would be delayed in sending.
