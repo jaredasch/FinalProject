@@ -30,7 +30,7 @@ Login Commands:
 * **exit**
   - Terminates client
 
-User Commands:
+User Commands (once logged in):
 
 * **create-page -name-**
   - Creates page with filename -name- and prompts user to enter contents in emacs
