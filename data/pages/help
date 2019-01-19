@@ -1,0 +1,17 @@
+Login Commands:
+
+signup <username> <password> (creates account)
+login <username> <password> (logs into existing account)
+help (displays help page)
+exit (terminates client)
+
+User Commands (once logged in):
+
+create <page> <name> (creates page with filename <name> and prompts user to enter contents in emacs)
+get-page <name> (displays page with filename <name>)
+edit-page <name> (opens page with filename <name> in emacs)
+search-titles <keyword> (displays list of pages beginning with <keyword>)
+search-contents <keyword> (searches every page and displays number of instances of <keyword> in each page)
+show-pages (displays list of all page names)
+help (displays help page)
+exit (terminates client)
