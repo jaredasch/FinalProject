@@ -2,6 +2,7 @@
 #include "networking.h"
 #include "user.h"
 #include "server.h"
+#include "sem.h"
 
 int client_socket;
 
@@ -24,6 +25,8 @@ char ** parse_args(char * cmd) {
 }
 
 void edit_page(char * page_name){
+
+    printf("edit page: [%s] %d\n", page_name, (int) page_name);
     struct response * res = calloc(1, sizeof(struct response));
     res->type = RES_EDIT;
 
@@ -45,6 +48,18 @@ void edit_page(char * page_name){
         write(client_socket, res, BUFFER_SIZE);
         free(res);
     } else {
+
+      int semID = create_sem(page_name); //creates/gets semaphore for the page
+
+      if(down_sem(page_name) == -1){ //if semaphore unavailible...
+        strcpy(res->body, "Page currently being edited. Try again later.");
+        res->type = RES_DISP;
+        write(client_socket, res, BUFFER_SIZE);
+        close(fd);
+        free(res);
+        return;
+      }
+
         char * buffer = calloc(1, BUFFER_SIZE);
         read(fd, buffer, BUFFER_SIZE);
 
@@ -60,6 +75,8 @@ void edit_page(char * page_name){
         if(read(client_socket, new_file_buffer, BUFFER_SIZE)){
             int edit_fd = open(path, O_WRONLY | O_TRUNC);
             write(edit_fd, new_file_buffer, strlen(new_file_buffer));
+            up_sem(page_name);  //ups sem
+            rm_sem(page_name); //removes sem
 
             //sends confirmation to client
             struct response * edit_res = calloc(1, sizeof(struct response));
@@ -70,6 +87,7 @@ void edit_page(char * page_name){
             free(edit_res);
             free(new_file_buffer);
         }
+
     }
 }
 
@@ -83,19 +101,6 @@ void create_page(char * page_name) {
         free(res);
         return;
     }
-
-    /*DIR* d = opendir("data/pages");
-    struct dirent *page;
-    while((page = readdir(d))){
-      if (page->d_type == DT_REG){ //if item is a file
-        char * page_name_cpy = page->d_name;
-        page_name[size] = 0;
-        if (strcmp(page_name,str) == 0){
-          ans[count] = page_name_cpy;
-          count++;
-        }
-      }
-    }*/
 
     printf("Trying to create page %s...", page_name);
     char filename[64] = "data/pages/";
@@ -112,10 +117,10 @@ void create_page(char * page_name) {
     } else {
         printf("successfully created\n");
 
-    close(fd);
-    free(res);
+        close(fd);
+        free(res);
 
-    edit_page(page_name);
+        edit_page(page_name);
   }
 }
 

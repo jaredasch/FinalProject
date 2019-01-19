@@ -5,7 +5,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
 #include <signal.h>
@@ -17,6 +16,8 @@
 #define RES_EDIT 1
 #define RES_DISP 2
 #define RES_EXIT 3
+
+#define BUFFER_SIZE 6000
 
 
 struct response {

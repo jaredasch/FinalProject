@@ -46,3 +46,4 @@ Fixed networking to work and not break after one buffer was passed through socke
 
 01-18-2019 -- Colin Hosking
 Fixed bug where user could create pages of the same name.
+Added semaphores so users could not edit pages at the same time.
