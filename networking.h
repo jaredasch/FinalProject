@@ -14,7 +14,7 @@
 #define NETWORKING_H
 
 #define PORT "9002"
-#define BUFFER_SIZE 6000
+#define BUFFER_SIZE 3000
 
 
 void error_check(int i, char *s);

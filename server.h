@@ -17,7 +17,7 @@
 #define RES_DISP 2
 #define RES_EXIT 3
 
-#define BUFFER_SIZE 6000
+#define BUFFER_SIZE 3000
 
 
 struct response {
