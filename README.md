@@ -6,7 +6,18 @@ Slicky-Wiki is a wiki for culminating any and all knowledge on assorted topics. 
 
 ## Running the Server ##
 
-????
+1. Clone repository.
+2. $ make
+3. To run server: $ ./server
+4. To connect as client: $ ./client
+
+## User-proofing Features ##
+
+* A User cannot signup with a username that is in use already
+* A User cannot create a page with a name of an existing page
+* A User who enters in incorrect (or empty) command will be displayed an error message
+* A User cannot edit a page simultaneously being edited by another user
+* A User cannot attempt to edit pages outside the page directory
 
 ## How to Use the Wiki ##
 After connecting to the server, the user will encounter a command prompt.
@@ -38,4 +49,4 @@ User Commands:
 
 ## Known Bugs ##
 
-If the server terminates before all clients have exited, the server will not run again because of the address being in use. To work around this, either wait until the address opens up or modify the port number in networking.h
+If the server terminates before all clients have exited, the server will not run again because of the address being in use. To work around this, either wait until the OS allows the address to open up or modify the port number in networking.h
